@@ -1,0 +1,69 @@
+server:
+  port: 8081
+
+spring:
+  redis:
+    host: localhost
+    port: 6379
+
+  application:
+    name: spring-cloud-gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: getAllFunds
+          uri: http://localhost:8080
+          predicates:
+            - Path=/funds
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                redis-rate-limiter.requestedTokens: 1
+
+        - id: getAllInvestors
+          uri: http://localhost:8080
+          predicates:
+            - Path=/investors
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                redis-rate-limiter.requestedTokens: 1
+
+        - id: getInvestorById
+          uri: http://localhost:8080
+          predicates:
+              - Path=/investors/{id}/**
+          filters:
+              - name: CircuitBreaker
+                args:
+                  name: investorCB
+                  fallbackUri: forward:/fallback/investors
+                  failureRateThreshold: 50 # percentage of failures to trip the circuit breaker
+                  slowCallRateThreshold: 50 # percentage of slow calls to trip the circuit breaker
+                  slowCallDurationThreshold: 2000ms # duration to consider a call slow
+                  slidingWindowType: COUNT_BASED # type of sliding window
+                  slidingWindowSize: 100 # size of sliding window
+                  minimumNumberOfCalls: 10 # minimum number of calls before evaluating
+                  waitDurationInOpenState: 60s # wait duration in open state before half-open
+                  permittedNumberOfCallsInHalfOpenState: 10 # number of calls permitted in half-open state
+
+        - id: getFundsById
+          uri: http://localhost:8080
+          predicates:
+              - Path=/funds/{id}/**
+          filters:
+              - name: AddRequestHeader
+                args:
+                  name: X-Request-Auth
+                  value: WeaponX
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
