@@ -19,11 +19,11 @@ public class SpringCloudGatewayApplication {
 	public KeyResolver keyResolver() {
 		return exchange -> Mono.just(exchange.getRequest().getRemoteAddress().getAddress().getHostAddress());
 	}
-	@Bean
-	CommandLineRunner verifyRedisConnection(ReactiveRedisConnectionFactory factory) {
-		return args -> {
-			factory.getReactiveConnection().serverCommands().flushAll().subscribe(System.out::println);
-		};
-	}
+//	@Bean
+//	CommandLineRunner verifyRedisConnection(ReactiveRedisConnectionFactory factory) {
+//		return args -> {
+//			factory.getReactiveConnection().serverCommands().flushAll().subscribe(System.out::println);
+//		};
+//	}
 
 }
